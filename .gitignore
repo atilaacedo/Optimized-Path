@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+.env
+
+# Rust
+target/
+**/*.rs.bk
+
+# Prisma
+/api/prisma/dev.db
+/api/prisma/dev.db-journal
+
+# IDEs
+.vscode/
+.idea/

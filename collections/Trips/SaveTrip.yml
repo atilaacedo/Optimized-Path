@@ -1,0 +1,30 @@
+info:
+  name: SaveTrip
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/trips
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Viagem de Trabalho Março",
+        "cities": [
+          "Jacobina",
+          "Bom Jesus da Lapa",
+          "Valença",
+          "Senhor do Bonfim",
+          "Souto Soares",
+          "Guanambi",
+          "Feira de Santana"
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
