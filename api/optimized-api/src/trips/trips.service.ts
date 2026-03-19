@@ -34,36 +34,51 @@ export class TripsService {
 
     async runOptimization(tripId: string) {
         const trip = await this.prisma.trip.findUnique({
-        where: { id: tripId },
-        include: { stops: true },
+            where: { id: tripId },
+            include: { stops: true },
         });
 
-        // Chamada para o microserviço em RUST
-        // const response = await fetch('http://localhost:3001/optimize', {
-        // method: 'POST',
-        // headers: { 'Content-Type': 'application/json' },
-        // body: JSON.stringify({
-        //     tripId: trip.id,
-        //     stops: trip.stops.map(s => ({ id: s.id, lat: s.latitude, lng: s.longitude }))
-        // }),
-        // });
+        if(!trip){
+            throw new Error('Trip not found');
+        }
 
-        // const data = await response.json();
-        // const orderedIds: string[] = data.orderedIds;
+        const originCoords = await this.geocodingService.getCoordinates(trip.origin);
 
-        // // Atualização em lote (Transaction) no Prisma
-        // await this.prisma.$transaction(
-        // orderedIds.map((id, index) =>
-        //     this.prisma.stop.update({
-        //     where: { id },
-        //     data: { orderIndex: index },
-        //     }),
-        // ),
-        // );
+        
+        const startPoint = {
+            id: 'START_LOCATION',
+            lat: originCoords.lat,
+            lng: originCoords.lng,
+        };
 
-        // return this.prisma.trip.findUnique({
-        // where: { id: tripId },
-        // include: { stops: { orderBy: { orderIndex: 'asc' } } },
-        // });
+       
+        const stopsPayload = [
+            startPoint,
+            ...trip.stops.map(s => ({ id: s.id, lat: s.latitude, lng: s.longitude }))
+        ];
+
+        const response = await fetch('http://localhost:3001/optimize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stops: stopsPayload }),
+        });
+
+        const data = await response.json();
+        
+        const orderedIds: string[] = data.orderedIds.filter(id => id !== 'START_LOCATION');
+
+        await this.prisma.$transaction(
+            orderedIds.map((id, index) =>
+            this.prisma.stop.update({
+                where: { id },
+                data: { orderIndex: index },
+            }),
+            ),
+        );
+
+        return this.prisma.trip.findUnique({
+            where: { id: tripId },
+            include: { stops: { orderBy: { orderIndex: 'asc' } } },
+        });
     }
 }

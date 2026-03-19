@@ -1,0 +1,15 @@
+info:
+  name: Optmized
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/trips/2696430d-0057-446d-bf2b-6e128369e4bd/optimize
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
